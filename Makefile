@@ -1,4 +1,4 @@
-.PHONY: help up down ps logs test clean data demo
+.PHONY: help up down ps logs test clean data demo forecast-report
 
 help:  ## 列出所有命令
 	@grep -E "^[a-z]+:.*##" Makefile | sed "s/:.*##/ —/"
@@ -8,6 +8,9 @@ data:  ## 生成合成数据，写出 CSV 并（数据库在跑时）灌入 Post
 
 demo:  ## 离线跑一遍补货决策 demo（不需要数据库）
 	uv run python -m tools.demo
+
+forecast-report:  ## 三方回测对比：季节性 vs LightGBM vs Chronos（装了才跑）
+	uv run python -m forecast.report
 
 up:  ## 构建镜像并在后台启动全部服务
 	docker compose up -d --build

@@ -24,6 +24,16 @@ make data              # 准备数据并灌进 Postgres
 
 **销量数据：默认用真实 M5（Walmart）。** 在 Kaggle “M5 Forecasting - Accuracy” 接受规则并下载，把 `calendar.csv`、`sell_prices.csv`、`sales_train_validation.csv` 放到 `data/raw/`（软链接即可，几百 MB 不必复制；`data/raw/` 不进 Git）。`make data` / `make demo` 检测到就自动用真实 M5；没下载则回退到合成销量，项目照常可跑。物流/在途和异常事件 M5 没有，始终由 `etl/` 合成，再按 `item_id` 和真实销量拼在一起。
 
+**三方回测对比（季节性 vs LightGBM vs Chronos-2）：**
+
+```bash
+make forecast-report                                 # 季节性 + LightGBM
+uv sync --extra forecast                             # 装 torch + chronos（可选、较大）
+uv run --extra forecast python -m forecast.report    # 三方（含 Chronos）
+```
+
+LightGBM（`forecast/lightgbm_model.py`）需要 OpenMP：**macOS 先 `brew install libomp`**，WSL/Ubuntu 一般自带。Chronos（`forecast/chronos.py`）是可选依赖（`forecast` extra，含 torch）。报告会自动跳过未安装的方法；Chronos 在单独子进程里跑以避开 torch 与 LightGBM 的 OpenMP 冲突。
+
 服务启动后：API http://localhost:8000 ，接口文档 http://localhost:8000/docs 。`make help` 列出所有命令。
 
 ## 项目结构
