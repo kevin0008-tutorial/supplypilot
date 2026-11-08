@@ -1,7 +1,13 @@
-.PHONY: help up down ps logs test clean
+.PHONY: help up down ps logs test clean data demo
 
 help:  ## 列出所有命令
 	@grep -E "^[a-z]+:.*##" Makefile | sed "s/:.*##/ —/"
+
+data:  ## 生成合成数据，写出 CSV 并（数据库在跑时）灌入 Postgres
+	uv run python -m etl.build
+
+demo:  ## 离线跑一遍补货决策 demo（不需要数据库）
+	uv run python -m tools.demo
 
 up:  ## 构建镜像并在后台启动全部服务
 	docker compose up -d --build
