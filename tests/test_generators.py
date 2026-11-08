@@ -34,7 +34,8 @@ def test_events_include_supplier_outage():
 
 
 def test_end_to_end_demo_reorder():
-    repo = build_demo_repository()
+    # 显式用合成销量：测试要确定、要快，不依赖本机是否下载了 M5。
+    repo = build_demo_repository(sales=gen_sales())
     items = config.item_ids()[:10]
     results = forecast_and_reorder(items, repo)
 

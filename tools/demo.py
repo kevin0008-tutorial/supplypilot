@@ -5,16 +5,20 @@
 """
 from __future__ import annotations
 
+import pandas as pd
+
 from etl import config
 from etl.gen_business import gen_inventory, gen_item_master, gen_suppliers
 from etl.gen_events import gen_events
 from etl.gen_logistics import gen_purchase_orders
-from etl.gen_sales import gen_sales
+from etl.sales_source import load_sales, sales_source_name
 from tools.repository import InMemoryRepository, forecast_and_reorder
 
 
-def build_demo_repository() -> InMemoryRepository:
-    sales = gen_sales()
+def build_demo_repository(sales: pd.DataFrame | None = None) -> InMemoryRepository:
+    # 默认按来源自动选（真实 M5 优先）；测试会显式传入合成销量以保证确定性。
+    if sales is None:
+        sales = load_sales()
     return InMemoryRepository(
         sales=sales,
         inventory=gen_inventory(sales),
@@ -28,6 +32,7 @@ def build_demo_repository() -> InMemoryRepository:
 
 
 def main() -> None:
+    print(f"销量来源：{sales_source_name()}")
     repo = build_demo_repository()
     results = forecast_and_reorder(config.item_ids()[:10], repo)
     for r in results:

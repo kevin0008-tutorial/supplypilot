@@ -1,11 +1,16 @@
-"""可选：把真实的 M5（Kaggle）子集读成和本项目 sales 表一样的结构。
+"""读取真实的 M5（Kaggle）子集，结构和本项目 sales 表完全一致。
 
-默认流程用 `etl.gen_sales` 的合成销量，离线、可复现、秒级可跑。想换成真实数据的学员：
-1. 在 Kaggle 的 "M5 Forecasting - Accuracy" 比赛页接受规则并下载数据；
-2. 把 calendar.csv、sell_prices.csv、sales_train_validation.csv 放到 data/raw/；
-3. 调用 `load_m5_subset("data/raw")`，得到的 DataFrame 可直接喂给 etl.load.write_table。
+第2节**默认用真实 M5 销量**：只要 data/raw/ 下有 M5 的三个 CSV，`make data` 和
+`make demo` 就自动用它们；没有就回退到 etl.gen_sales 的合成销量（保证任何机器都能跑）。
 
+怎么准备数据（老师和学员各自做一次）：
+1. 在 Kaggle "M5 Forecasting - Accuracy" 比赛页接受规则并下载；
+2. 把 calendar.csv、sell_prices.csv、sales_train_validation.csv 放到 data/raw/
+   （可以用软链接，不必复制几百 MB）。
 原始数据不进 Git（见 .gitignore 的 data/raw/），只提交这个脚本。
+
+注意：M5 只有销量和价格，**没有**物流/在途和异常事件——那些仍由 etl 合成，
+再按 item_id 和真实销量拼在一起。
 """
 from __future__ import annotations
 
@@ -15,18 +20,27 @@ import pandas as pd
 
 from etl import config
 
+RAW_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
+_REQUIRED = ["calendar.csv", "sell_prices.csv", "sales_train_validation.csv"]
 
-def load_m5_subset(raw_dir: str | Path) -> pd.DataFrame:
+
+def m5_available(raw_dir: str | Path = RAW_DIR) -> bool:
     raw = Path(raw_dir)
-    calendar = pd.read_csv(raw / "calendar.csv")
-    prices = pd.read_csv(raw / "sell_prices.csv")
+    return all((raw / f).exists() for f in _REQUIRED)
+
+
+def load_m5_subset(raw_dir: str | Path = RAW_DIR) -> pd.DataFrame:
+    raw = Path(raw_dir)
+    items = set(config.item_ids())
+
+    calendar = pd.read_csv(raw / "calendar.csv", usecols=["d", "date", "wm_yr_wk"])
     sales_wide = pd.read_csv(raw / "sales_train_validation.csv")
 
-    # 只取目标门店 + 目标品类的子集。
+    # 精确取目标门店 + 我们那 20 个 item_id（和合成的供应商/库存等表对齐）。
     sub = sales_wide[
         (sales_wide["store_id"] == config.STORE_ID)
-        & (sales_wide["dept_id"] == config.DEPT_ID)
-    ].head(config.N_ITEMS)
+        & (sales_wide["item_id"].isin(items))
+    ]
 
     d_cols = [c for c in sub.columns if c.startswith("d_")]
     long = sub.melt(
@@ -34,13 +48,18 @@ def load_m5_subset(raw_dir: str | Path) -> pd.DataFrame:
         value_vars=d_cols,
         var_name="d",
         value_name="units",
+    ).merge(calendar, on="d", how="left")
+
+    # 价格按 (店, 商品, 周) 关联；只读需要的列，避免整张 2 亿行的大表进内存。
+    prices = pd.read_csv(
+        raw / "sell_prices.csv",
+        usecols=["store_id", "item_id", "wm_yr_wk", "sell_price"],
     )
-    # M5 用 d_1/d_2… 编号，用 calendar 映射成真实日期。
-    long = long.merge(calendar[["d", "date", "wm_yr_wk"]], on="d", how="left")
-    long = long.merge(
-        prices[["store_id", "item_id", "wm_yr_wk", "sell_price"]],
-        on=["store_id", "item_id", "wm_yr_wk"],
-        how="left",
-    )
+    prices = prices[(prices["store_id"] == config.STORE_ID) & (prices["item_id"].isin(items))]
+    long = long.merge(prices, on=["store_id", "item_id", "wm_yr_wk"], how="left")
+
     long["d"] = pd.to_datetime(long["date"]).dt.date
-    return long[["store_id", "item_id", "dept_id", "d", "units", "sell_price"]]
+    long["units"] = long["units"].astype(int)
+    return long[["store_id", "item_id", "dept_id", "d", "units", "sell_price"]].sort_values(
+        ["item_id", "d"]
+    ).reset_index(drop=True)

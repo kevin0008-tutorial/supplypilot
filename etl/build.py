@@ -12,14 +12,14 @@ from etl import config
 from etl.gen_business import gen_inventory, gen_item_master, gen_suppliers
 from etl.gen_events import gen_events
 from etl.gen_logistics import gen_purchase_orders
-from etl.gen_sales import gen_sales
 from etl.load import load_all
+from etl.sales_source import load_sales, sales_source_name
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "processed"
 
 
 def generate_frames() -> dict[str, pd.DataFrame]:
-    sales = gen_sales()
+    sales = load_sales()  # 默认真实 M5，没下载则回退合成
     return {
         "sales": sales,
         "suppliers": gen_suppliers(),
@@ -39,7 +39,8 @@ def write_csvs(frames: dict[str, pd.DataFrame]) -> None:
 def main() -> None:
     frames = generate_frames()
     write_csvs(frames)
-    print(f"已生成 CSV 到 {OUT_DIR}（{config.N_ITEMS} 个商品，{config.HISTORY_DAYS} 天）")
+    print(f"销量来源：{sales_source_name()}")
+    print(f"已生成 CSV 到 {OUT_DIR}（{frames['sales']['item_id'].nunique()} 个商品）")
     try:
         load_all(frames)
         print("已灌入 Postgres。")

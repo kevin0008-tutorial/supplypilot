@@ -19,8 +19,10 @@ make demo              # 离线跑一遍补货决策（不需要数据库）
 
 ```bash
 make up                # 启动 Postgres（和 API）
-make data              # 生成合成数据，灌进 Postgres
+make data              # 准备数据并灌进 Postgres
 ```
+
+**销量数据：默认用真实 M5（Walmart）。** 在 Kaggle “M5 Forecasting - Accuracy” 接受规则并下载，把 `calendar.csv`、`sell_prices.csv`、`sales_train_validation.csv` 放到 `data/raw/`（软链接即可，几百 MB 不必复制；`data/raw/` 不进 Git）。`make data` / `make demo` 检测到就自动用真实 M5；没下载则回退到合成销量，项目照常可跑。物流/在途和异常事件 M5 没有，始终由 `etl/` 合成，再按 `item_id` 和真实销量拼在一起。
 
 服务启动后：API http://localhost:8000 ，接口文档 http://localhost:8000/docs 。`make help` 列出所有命令。
 
