@@ -1,0 +1,27 @@
+services:
+  db:                                   # 服务 1：数据库，名字叫 db
+    image: postgres:16                  # 直接用官方镜像
+    env_file: .env                      # 从 .env 读取用户名、密码、库名
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"   # 你电脑的端口:容器的端口
+    volumes:
+      - pgdata:/var/lib/postgresql/data # 数据存进数据卷，容器删了数据还在
+    healthcheck:                        # 健康检查：每 5 秒问一次“准备好了吗”
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:                                  # 服务 2：后端，名字叫 api
+    build: .                            # 用当前目录的 Dockerfile 打包
+    env_file: .env
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./api:/app/api                  # 把你电脑上的 api 文件夹“挂”进容器
+    depends_on:
+      db:
+        condition: service_healthy      # 等数据库健康了再启动后端
+
+volumes:
+  pgdata:                               # 声明一个叫 pgdata 的数据卷

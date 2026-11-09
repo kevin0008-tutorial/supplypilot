@@ -1,0 +1,20 @@
+[project]
+name = "supplypilot"
+version = "0.1.0"
+description = "零售补货决策 Copilot（直通硅谷 AI 工程项目课）"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.142",
+    "uvicorn[standard]>=0.35",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
+    "httpx2>=2.13",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
