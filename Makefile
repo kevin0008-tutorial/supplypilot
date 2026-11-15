@@ -1,4 +1,4 @@
-.PHONY: help up down ps logs test clean data demo forecast-report
+.PHONY: help up down ps logs test clean data demo forecast-report explain-seasonal explain-lgbm explain-chronos
 
 help:  ## 列出所有命令
 	@grep -E "^[a-z]+:.*##" Makefile | sed "s/:.*##/ —/"
@@ -11,6 +11,15 @@ demo:  ## 离线跑一遍补货决策 demo（不需要数据库）
 
 forecast-report:  ## 三方回测对比：季节性 vs LightGBM vs Chronos（装了才跑）
 	uv run python -m forecast.report
+
+explain-seasonal:  ## 补充课实验：季节性朴素法怎么"抄上周"
+	uv run python -m forecast.explain seasonal
+
+explain-lgbm:  ## 补充课实验：LightGBM 过拟合/偏差-方差 + 特征重要性
+	uv run python -m forecast.explain lgbm
+
+explain-chronos:  ## 补充课实验：Chronos 分位数扇形（需 uv sync --extra forecast）
+	uv run --extra forecast python -m forecast.explain chronos
 
 up:  ## 构建镜像并在后台启动全部服务
 	docker compose up -d --build

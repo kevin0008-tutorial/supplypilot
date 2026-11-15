@@ -34,6 +34,29 @@ uv run --extra forecast python -m forecast.report    # 三方（含 Chronos）
 
 LightGBM（`forecast/lightgbm_model.py`）需要 OpenMP：**macOS 先 `brew install libomp`**，WSL/Ubuntu 一般自带。Chronos（`forecast/chronos.py`）是可选依赖（`forecast` extra，含 torch）。报告会自动跳过未安装的方法；Chronos 在单独子进程里跑以避开 torch 与 LightGBM 的 OpenMP 冲突。
 
+## 第 2.1 节补充课：三个"看得见"的小实验
+
+补充课深挖 forecasting 三条路线的原理，配套 `forecast/explain.py` 把概念变成能跑、能看的输出。三条命令各自独立进程、各自懒加载，所以跑 Chronos 不会把 LightGBM 拉进来（天然避开 OpenMP 冲突）。序列默认取销量日度总和，没有真实 M5 时自动回退合成销量。
+
+```bash
+# 准备（Mac/WSL 相同）：拿到补充课分支并装依赖
+git switch lession_2.1
+uv sync                      # 主依赖（含 lightgbm、scikit-learn）
+# macOS 还需一次：brew install libomp
+
+# ① 季节性朴素法：打印"抄上周"的循环预测 + WAPE
+make explain-seasonal        # = uv run python -m forecast.explain seasonal
+
+# ② LightGBM：num_leaves 扫描现场演示过拟合/偏差-方差 + 特征重要性
+make explain-lgbm            # = uv run python -m forecast.explain lgbm
+
+# ③ Chronos：分位数扇形（概率预测）。先装可选依赖（含 torch，较大）
+uv sync --extra forecast
+make explain-chronos         # = uv run --extra forecast python -m forecast.explain chronos
+```
+
+配套课件（相对链接、离线可开）在 `courseware/lesson2-1-*.html`。
+
 服务启动后：API http://localhost:8000 ，接口文档 http://localhost:8000/docs 。`make help` 列出所有命令。
 
 ## 项目结构
