@@ -65,4 +65,4 @@
 | 4 | 194.7 | 866.0 | 873.9 | 5.0 | 0 |
 | 8 | 195.0 | 2010.7 | 2012.6 | 5.0 | 0 |
 
-读法：吞吐很快见顶（~195 tok/s，Ollama 默认并行度有限），TTFT 随并发爆炸（排队），TPOT 稳定。把它和 vLLM（连续批处理 + PagedAttention）的曲线并排，就能解释"生产为什么用 vLLM"。免费 GPU 的环境配置见课件 `courseware/lession03/lession3-gpu-setup.html`（第⑧页）。
+读法：吞吐很快见顶（~195 tok/s，Ollama 默认并行度有限），TTFT 随并发爆炸（排队），TPOT 稳定。把它和 vLLM（连续批处理 + PagedAttention）的曲线并排，就能解释"生产为什么用 vLLM"。免费 GPU 的环境配置见课件 `courseware/lession03/lession3-8-gpu-setup.html`（第⑧页）。
