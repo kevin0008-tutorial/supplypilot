@@ -53,3 +53,16 @@
 
 ## 5. 一句话总结
 （例：在 T4 上，1.5B-FP16 单请求 TTFT ~__ms、峰值吞吐 ~__tok/s@并发__；7B 必须量化到 INT4 才跑得起来。）
+
+## 附：本地 Ollama 基线（老师 Mac M5 Pro 实测，供对照）
+
+不上 GPU，用本地 Ollama（`ollama pull qwen2.5:1.5b` 后 `make bench MODEL=qwen2.5:1.5b BASE=http://localhost:11434/v1`）也能体验压测。一次真实结果（每档 16 请求，max_tokens=96）：
+
+| 并发 | 吞吐(tok/s) | TTFT p50(ms) | TTFT p90(ms) | TPOT(ms) | 失败 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 157.4 | 8.9 | 11.7 | 5.0 | 0 |
+| 2 | 195.2 | 292.4 | 293.2 | 5.0 | 0 |
+| 4 | 194.7 | 866.0 | 873.9 | 5.0 | 0 |
+| 8 | 195.0 | 2010.7 | 2012.6 | 5.0 | 0 |
+
+读法：吞吐很快见顶（~195 tok/s，Ollama 默认并行度有限），TTFT 随并发爆炸（排队），TPOT 稳定。把它和 vLLM（连续批处理 + PagedAttention）的曲线并排，就能解释"生产为什么用 vLLM"。免费 GPU 的环境配置见课件 `courseware/lession03/lession3-gpu-setup.html`（第⑧页）。

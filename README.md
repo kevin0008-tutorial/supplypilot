@@ -81,7 +81,7 @@ make bench MODEL=Qwen/Qwen2.5-1.5B-Instruct BASE=http://localhost:8000/v1
 make bench MODEL=qwen2.5:1.5b BASE=http://localhost:11434/v1
 ```
 
-性能报告模板在 [docs/serving_report.md](docs/serving_report.md)。三个核心指标：TTFT（首 token 延迟）、TPOT（每 token 时间）、吞吐量。
+性能报告模板在 [docs/serving_report.md](docs/serving_report.md)。三个核心指标：TTFT（首 token 延迟）、TPOT（每 token 时间）、吞吐量。免费 GPU（Kaggle/Colab）怎么配、模型要不要下载，见课件 `courseware/lession03/lession3-gpu-setup.html`（第⑧页附录）；本地 Ollama 已在老师 Mac 上实测可跑（见报告模板附录）。
 
 服务启动后：API http://localhost:8000 ，接口文档 http://localhost:8000/docs 。`make help` 列出所有命令。
 
