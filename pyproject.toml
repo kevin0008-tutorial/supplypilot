@@ -18,6 +18,11 @@ dependencies = [
 forecast = [
     "chronos-forecasting>=2.3.2",
 ]
+# 第3节 KV Cache demo 用到（benchmark/kvcache_calc 只用标准库，无需任何额外依赖）
+serving = [
+    "torch>=2.3",
+    "transformers>=4.44",
+]
 
 [dependency-groups]
 dev = [

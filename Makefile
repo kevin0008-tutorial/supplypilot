@@ -1,4 +1,4 @@
-.PHONY: help up down ps logs test clean data demo forecast-report explain-seasonal explain-lgbm explain-chronos
+.PHONY: help up down ps logs test clean data demo forecast-report explain-seasonal explain-lgbm explain-chronos kvcalc kv-demo bench
 
 help:  ## 列出所有命令
 	@grep -E "^[a-z]+:.*##" Makefile | sed "s/:.*##/ —/"
@@ -20,6 +20,15 @@ explain-lgbm:  ## 补充课实验：LightGBM 过拟合/偏差-方差 + 特征重
 
 explain-chronos:  ## 补充课实验：Chronos 分位数扇形（需 uv sync --extra forecast）
 	uv run --extra forecast python -m forecast.explain chronos
+
+kvcalc:  ## 第3节：显存/KV Cache 估算器（纯标准库）
+	uv run python -m serving.kvcache_calc --seq 4096 --batch 8
+
+kv-demo:  ## 第3节：对比开/关 KV Cache 的生成速度（需 uv sync --extra serving）
+	uv run --extra serving python -m serving.kv_cache_demo --tokens 64
+
+bench:  ## 第3节：压测一个 OpenAI 兼容服务（先起 vLLM/Ollama；传 BASE= MODEL=）
+	uv run python -m serving.benchmark --base-url $(or $(BASE),http://localhost:8000/v1) --model $(MODEL) --concurrency 1,4,8,16
 
 up:  ## 构建镜像并在后台启动全部服务
 	docker compose up -d --build

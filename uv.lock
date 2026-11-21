@@ -985,6 +985,10 @@ dependencies = [
 forecast = [
     { name = "chronos-forecasting" },
 ]
+serving = [
+    { name = "torch" },
+    { name = "transformers" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -1001,9 +1005,11 @@ requires-dist = [
     { name = "pandas", specifier = ">=3.1.1" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.8" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
+    { name = "torch", marker = "extra == 'serving'", specifier = ">=2.3" },
+    { name = "transformers", marker = "extra == 'serving'", specifier = ">=4.44" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.35" },
 ]
-provides-extras = ["forecast"]
+provides-extras = ["forecast", "serving"]
 
 [package.metadata.requires-dev]
 dev = [

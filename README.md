@@ -57,6 +57,32 @@ make explain-chronos         # = uv run --extra forecast python -m forecast.expl
 
 配套课件（相对链接、离线可开）在 `courseware/lesson2-1-*.html`。
 
+## 第 3 节：大模型推理服务部署
+
+`serving/` 下四个脚本，配合 `courseware/lession03/` 的课件。**`benchmark`、`kvcache_calc`、`openai_client_demo` 只用 Python 标准库**，Kaggle/Colab/本地零额外安装即可跑；只有 `kv_cache_demo` 需要 torch+transformers。
+
+```bash
+git switch lession_3
+
+# ① 显存 / KV Cache 估算（纯标准库，课上现场算）
+make kvcalc
+uv run python -m serving.kvcache_calc --model qwen2.5-7b --seq 4096 --vram 8 --weight-dtype int4
+
+# ② 开/关 KV Cache 的生成提速（HF Transformers，CPU 即可；首次下载 gpt2 约 250MB）
+uv sync --extra serving
+make kv-demo                 # gpt2 上实测约 4× 加速，输出完全一致
+
+# ③ 在免费 GPU 上起 vLLM 服务并压测：在 Kaggle/Colab 打开并运行
+#    serving/vllm_server.ipynb （T4/P100，开源免登录模型 Qwen2.5-1.5B-Instruct）
+
+# ④ 压测任意 OpenAI 兼容服务（vLLM 或 Ollama），量 TTFT/TPOT/吞吐
+make bench MODEL=Qwen/Qwen2.5-1.5B-Instruct BASE=http://localhost:8000/v1
+# 打 Ollama：先 ollama pull qwen2.5:1.5b，再
+make bench MODEL=qwen2.5:1.5b BASE=http://localhost:11434/v1
+```
+
+性能报告模板在 [docs/serving_report.md](docs/serving_report.md)。三个核心指标：TTFT（首 token 延迟）、TPOT（每 token 时间）、吞吐量。
+
 服务启动后：API http://localhost:8000 ，接口文档 http://localhost:8000/docs 。`make help` 列出所有命令。
 
 ## 项目结构
